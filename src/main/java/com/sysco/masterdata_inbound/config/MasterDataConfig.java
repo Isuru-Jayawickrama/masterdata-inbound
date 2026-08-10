@@ -15,5 +15,7 @@ public class MasterDataConfig {
 
     private String primaryKey;
 
+    private List<String> selectedFields;
+
     private List<FieldMapping> fieldMappings;
 }

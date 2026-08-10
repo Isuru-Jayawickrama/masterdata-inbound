@@ -1,8 +1,14 @@
 {
   "domain": "item",
-  "sourceView": "item_consumer_view",
+  "sourceView": "project.dataset.item_consumer_view",
   "targetTable": "item",
   "primaryKey": "supc",
+  "selectedFields": [
+    "supc",
+    "item_name",
+    "subscriber_id",
+    "updated_at"
+  ],
   "fieldMappings": [
     {
       "source": "supc",
