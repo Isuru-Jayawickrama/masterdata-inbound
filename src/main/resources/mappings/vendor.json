@@ -1,0 +1,16 @@
+{
+  "domain": "item",
+  "sourceView": "item_consumer_view",
+  "targetTable": "item",
+  "primaryKey": "supc",
+  "fieldMappings": [
+    {
+      "source": "supc",
+      "target": "supc"
+    },
+    {
+      "source": "item_name",
+      "target": "name"
+    }
+  ]
+}
