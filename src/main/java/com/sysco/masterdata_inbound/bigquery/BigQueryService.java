@@ -37,12 +37,12 @@ public class BigQueryService {
 
         sample.put(
                 "supc",
-                "1001"
+                "1005"
         );
 
         sample.put(
                 "item_name",
-                "Chicken Breast"
+                "Chicken Wings"
         );
 
         rows.add(sample);
