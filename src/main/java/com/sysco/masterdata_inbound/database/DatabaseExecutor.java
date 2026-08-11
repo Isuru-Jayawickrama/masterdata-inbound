@@ -11,13 +11,8 @@ public class DatabaseExecutor {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void execute(
-            SqlStatement statement
-    ) {
+    public void execute(SqlStatement statement) {
 
-        jdbcTemplate.update(
-                statement.sql(),
-                statement.params().toArray()
-        );
+        jdbcTemplate.update(statement.sql(), statement.params().toArray());
     }
 }
