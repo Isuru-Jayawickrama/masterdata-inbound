@@ -4,6 +4,7 @@ import com.sysco.masterdata_inbound.bigquery.BigQueryService;
 import com.sysco.masterdata_inbound.config.ConfigurationCache;
 import com.sysco.masterdata_inbound.config.MasterDataConfig;
 import com.sysco.masterdata_inbound.database.DatabaseSyncService;
+import com.sysco.masterdata_inbound.exception.ConfigurationException;
 import com.sysco.masterdata_inbound.mapper.RecordMapper;
 import com.sysco.masterdata_inbound.model.NotificationMessage;
 import com.sysco.masterdata_inbound.validation.PayloadValidationService;
@@ -34,20 +35,20 @@ public class NotificationProcessingService {
 
         if (config == null) {
 
-            throw new RuntimeException("No configuration found for domain : " + message.getDomain());
+            throw new ConfigurationException("No configuration found for domain : " + message.getDomain());
         }
 
         List<Map<String, Object>> rows = bigQueryService.queryData(config, message);
 
-        System.out.println("Records returned : " + rows.size());
+        log.info("Retrieved {} records from BigQuery", rows.size());
 
         for (Map<String, Object> row : rows) {
 
             Map<String, Object> mapped = recordMapper.map(row, config);
-
+            log.debug("Processing mapped record {}", mapped);
             databaseSyncService.sync(config, mapped);
         }
 
-        rows.forEach(System.out::println);
+        log.info("Successfully processed {} records for domain {}", rows.size(), message.getDomain());
     }
 }

@@ -18,37 +18,21 @@ public class ConfigurationValidationService {
         validateNotBlank(config.getTargetTable(), "targetTable");
         validateNotBlank(config.getPrimaryKey(), "primaryKey");
 
-        if (config.getSelectedFields() == null ||
-                config.getSelectedFields().isEmpty()) {
-            throw new ValidationException(
-                    "selectedFields cannot be empty for domain "
-                            + config.getDomain()
-            );
+        if (config.getSelectedFields() == null || config.getSelectedFields().isEmpty()) {
+            throw new ValidationException("selectedFields cannot be empty for domain " + config.getDomain());
         }
 
-        if (config.getFieldMappings() == null ||
-                config.getFieldMappings().isEmpty()) {
-            throw new ValidationException(
-                    "fieldMappings cannot be empty for domain "
-                            + config.getDomain()
-            );
+        if (config.getFieldMappings() == null || config.getFieldMappings().isEmpty()) {
+            throw new ValidationException("fieldMappings cannot be empty for domain " + config.getDomain());
         }
 
-        log.info(
-                "Configuration validation successful for domain {}",
-                config.getDomain()
-        );
+        log.info("Configuration validation successful for domain {}", config.getDomain());
     }
 
-    private void validateNotBlank(
-            String value,
-            String fieldName
-    ) {
+    private void validateNotBlank(String value, String fieldName) {
 
         if (value == null || value.isBlank()) {
-            throw new ValidationException(
-                    fieldName + " cannot be empty"
-            );
+            throw new ValidationException(fieldName + " cannot be empty");
         }
     }
 }
