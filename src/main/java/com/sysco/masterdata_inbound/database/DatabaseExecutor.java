@@ -22,7 +22,7 @@ public class DatabaseExecutor {
     public void execute(SqlStatement statement) {
 
         try {
-
+            log.info("Executing UPSERT against table");
             jdbcTemplate.update(statement.sql(), statement.params().toArray());
 
         } catch (CannotGetJdbcConnectionException ex) {
