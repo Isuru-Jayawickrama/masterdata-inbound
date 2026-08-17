@@ -25,30 +25,54 @@ public class NotificationProcessingService {
     private final RecordMapper recordMapper;
     private final DatabaseSyncService databaseSyncService;
     private final PayloadValidationService payloadValidationService;
+    private final FailedMessageService failedMessageService;
 
     public void process(NotificationMessage message) {
-        log.info("Processing notification for domain {}", message.getDomain());
 
-        payloadValidationService.validate(message);
+        processInternal(message, true);
+    }
 
-        MasterDataConfig config = configurationCache.get(message.getDomain());
+    public void processRetry(NotificationMessage message) {
 
-        if (config == null) {
+        processInternal(message, false);
+    }
 
-            throw new ConfigurationException("No configuration found for domain : " + message.getDomain());
+    private void processInternal(NotificationMessage message, boolean saveFailure) {
+
+        try {
+
+            log.info("Processing notification for domain {}", message.getDomain());
+
+            payloadValidationService.validate(message);
+
+            MasterDataConfig config = configurationCache.get(message.getDomain());
+
+            if (config == null) {
+
+                throw new ConfigurationException("No configuration found for domain : " + message.getDomain());
+            }
+
+            List<Map<String, Object>> rows = bigQueryService.queryData(config, message);
+
+            log.info("Retrieved {} records from BigQuery", rows.size());
+
+            for (Map<String, Object> row : rows) {
+
+                Map<String, Object> mapped = recordMapper.map(row, config);
+
+                databaseSyncService.sync(config, mapped);
+            }
+
+            log.info("Successfully processed {} records for domain {}", rows.size(), message.getDomain());
+
+        } catch (Exception ex) {
+
+            if (saveFailure) {
+
+                failedMessageService.saveFailure(message, ex);
+            }
+
+            throw ex;
         }
-
-        List<Map<String, Object>> rows = bigQueryService.queryData(config, message);
-
-        log.info("Retrieved {} records from BigQuery", rows.size());
-
-        for (Map<String, Object> row : rows) {
-
-            Map<String, Object> mapped = recordMapper.map(row, config);
-            log.debug("Processing mapped record {}", mapped);
-            databaseSyncService.sync(config, mapped);
-        }
-
-        log.info("Successfully processed {} records for domain {}", rows.size(), message.getDomain());
     }
 }
