@@ -2,7 +2,11 @@ package com.sysco.masterdata_inbound.integration;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.sysco.masterdata_inbound.bigquery.BigQueryService;
+import com.sysco.masterdata_inbound.entity.FailedMessage;
+import com.sysco.masterdata_inbound.entity.FailedMessageStatus;
+import com.sysco.masterdata_inbound.exception.RetryableBigQueryException;
 import com.sysco.masterdata_inbound.model.NotificationMessage;
+import com.sysco.masterdata_inbound.repository.FailedMessageRepository;
 import com.sysco.masterdata_inbound.service.NotificationProcessingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,9 @@ class NotificationProcessingServiceIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private FailedMessageRepository failedMessageRepository;
+
     @MockitoBean
     private BigQueryService bigQueryService;
 
@@ -51,33 +58,46 @@ class NotificationProcessingServiceIntegrationTest {
         bigQueryRow.put("supc", "1005");
         bigQueryRow.put("item_name", "Chicken Wings");
 
-        when(bigQueryService.queryData(any(), any()))
-                .thenReturn(List.of(bigQueryRow));
+        when(bigQueryService.queryData(any(), any())).thenReturn(List.of(bigQueryRow));
 
         NotificationMessage message = new NotificationMessage();
 
         message.setDomain("item");
-        message.setCutoffStartTime(
-                Instant.now().minusSeconds(3600).toString()
-        );
-        message.setCutoffEndTime(
-                Instant.now().toString()
-        );
-        message.setSubscriberIds(
-                List.of("152")
-        );
+        message.setCutoffStartTime(Instant.now().minusSeconds(3600).toString());
+        message.setCutoffEndTime(Instant.now().toString());
+        message.setSubscriberIds(List.of("152"));
 
         notificationProcessingService.process(message);
 
-        Integer count = jdbcTemplate.queryForObject(
-                """
+        Integer count = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*)
                 FROM item
                 WHERE supc = '1005'
-                """,
-                Integer.class
-        );
+                """, Integer.class);
 
         assertThat(count).isEqualTo(1);
+    }
+
+    @Test
+    void should_save_failed_message_when_retryable_exception_occurs() {
+
+        when(bigQueryService.queryData(any(), any())).thenThrow(new RetryableBigQueryException("Temporary BigQuery failure", null));
+
+        NotificationMessage message = new NotificationMessage();
+
+        message.setDomain("item");
+
+        message.setCutoffStartTime(Instant.now().minusSeconds(3600).toString());
+
+        message.setCutoffEndTime(Instant.now().toString());
+
+        message.setSubscriberIds(List.of("152"));
+
+        notificationProcessingService.process(message);
+
+        List<FailedMessage> failures = failedMessageRepository.findAll();
+
+        System.out.println("Failures: " + failures);
+
     }
 }

@@ -72,7 +72,6 @@ public class NotificationProcessingService {
                 failedMessageService.saveFailure(message, ex);
             }
 
-            throw ex;
         }
     }
 }
