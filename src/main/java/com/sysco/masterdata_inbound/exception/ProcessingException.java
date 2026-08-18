@@ -9,4 +9,6 @@ public abstract class ProcessingException extends RuntimeException {
     protected ProcessingException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public abstract boolean isRetryable();
 }

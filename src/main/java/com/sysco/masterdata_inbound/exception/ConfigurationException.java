@@ -9,4 +9,9 @@ public class ConfigurationException extends ProcessingException {
     public ConfigurationException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    @Override
+    public boolean isRetryable() {
+        return false;
+    }
 }
